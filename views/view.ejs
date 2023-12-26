@@ -40,7 +40,7 @@
           <a href="/data" class="btn btn-secondary fw-bold ">&larr; Back</a>
       </div>
 
-    <div class="container bg-primary  text-center p-2 mt-3">
+    <div class="container bg-secondary  text-center p-2 mt-3">
         <h3 class="text-light fw-4">Sender Details</h3>
     </div>
     <!-- Sender Details -->
@@ -54,15 +54,15 @@
         <h4>Name:  <%= e.name %></h4>
         <h4>Email:  <%= e.email %></h4>
         <h4>Mobile:  <%= e.contact %></h4>
-        <h4>Balence: <%= e.amount %> </h4>
+        <h4>Balance: <%= e.amount %> </h4>
         
     <%}) %>  
       </div>
      
   </div>
 <!-- Reciver -->
-  <div class="container bg-primary  text-center p-2 mt-3">
-    <h3 class="text-light fw-4">Reciver Details</h3>
+  <div class="container bg-secondary  text-center p-2 mt-3">
+    <h3 class="text-light fw-4">Receiver Details</h3>
 </div>
    <div class="container">
     <form action="/transfer" method="POST" >
@@ -81,7 +81,7 @@
         <div class="form-group  mt-3">
           <label for="exampleInputEmail1">TO</label>
           <select class="form-select" name="reciverName">
-            <option selected>Select Reciver Name</option>
+            <option selected>Select Receiver Name</option>
             <% records.forEach((e)=>{%>
 
               <option> <%= e.name %></option>
@@ -92,7 +92,7 @@
         </div>
         <div class="form-group  mt-3">
             <select class="form-select"name="reciverEmail">
-            <option selected>Select Reciver Email</option>
+            <option selected>Select Receiver Email</option>
             <% records.forEach((e)=>{%>
               <option> <%= e.email %> </option>
 
@@ -101,13 +101,20 @@
           </select>
     
         </div>
+        <div class="form-group mt-3">
+          <select class="form-select" name="transactionType" id="transactionType">
+            <option value="">choose payment type</option>
+            <option value="rtgs">RTGS</option>
+            <option value="imps">IMPS</option>
+          </select>
+        </div>
+        <!-- <div id="transactionTypeResult"></div>
+        <script>transactionType.onchange = function(){
+          transactionTypeResult.innerText = this.value
+        }</script> -->
         <div class="form-group  mt-3">
             <label for="exampleInputEmail1">Amount</label>
-
-           
-
             <input type="Amount" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" name="transferAmount" placeholder="Enter Amount" required>
-    
         <button type="submit" class="btn btn-primary mt-3 text-center">Submit</button>
       </form>
    </div>

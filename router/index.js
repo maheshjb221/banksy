@@ -1,164 +1,237 @@
-const router = require('express').Router();
-const users = require('../model/allUser');
-const customers = require('../model/allUser');
-const historyModel = require('../model/histoyModel');
+const router = require("express").Router();
+const users = require("../model/allUser");
+const customers = require("../model/allUser");
+const historyModel = require("../model/histoyModel");
+let bankReserveFunds = 100000;
 
-
-router.get('/', (req,res)=> {
-    res.render('home')
+router.get("/", (req, res) => {
+  res.render("home");
 });
 
 //  ADD USER
-router.get('/adduser', (req, res) => {
-    res.render('addUser', {title: "Add User", msg:''})
+router.get("/adduser", (req, res) => {
+  res.render("addUser", { title: "Add User", msg: "" });
 });
 
-router.post('/adduser',(req, res) =>{
-    
-    const {userName, userEmail, userNumber, userAmount} = req.body;
-    const User = new customers({
-        name: userName,
-        email: userEmail,
-        contact: userNumber,
-        amount: userAmount,
-    });
-    User.save().then(()=>{
-        res.render('addUser', {title: "Add User", msg:'User Added Successfully'})
-    }).catch((err)=>{
-        console.log(err)
+router.post("/adduser", (req, res) => {
+  const { userName, userEmail, userNumber, userAmount } = req.body;
+  const User = new customers({
+    name: userName,
+    email: userEmail,
+    contact: userNumber,
+    amount: userAmount,
+  });
+  User.save()
+    .then(() => {
+      res.render("addUser", {
+        title: "Add User",
+        msg: "User Added Successfully",
+      });
     })
-})
-
+    .catch((err) => {
+      console.log(err);
+    });
+});
 
 //- View All User
-router.get('/data',(req,res) => {
-    const allData = customers.find({});
-    allData.exec((err, data) => {
-        if(err){
-            throw err;
-        }
-        else{
-            res.render('viewUser',{title: "View Users", data:data});
-        }
-    })
-   
-})
+router.get("/data", (req, res) => {
+  const allData = customers.find({});
+  allData.exec((err, data) => {
+    if (err) {
+      throw err;
+    } else {
+      res.render("viewUser", { title: "View Users", data: data });
+    }
+  });
+});
 
 // Delete User
-router.get('/delete/:id',(req,res)=> {
- const id = req.params.id;
- const updateData = customers.findByIdAndDelete({"_id":id});
- updateData.exec((err,data) => {
-     if(err){throw err}
-     else{
-         res.redirect('/data')
-     }
- })
+router.get("/delete/:id", (req, res) => {
+  const id = req.params.id;
+  const updateData = customers.findByIdAndDelete({ _id: id });
+  updateData.exec((err, data) => {
+    if (err) {
+      throw err;
+    } else {
+      res.redirect("/data");
+    }
+  });
 });
 
-router.get("/view/:id",(req,res) => {
-    const id = req.params.id;
-    const Sender = customers.find({"_id": id});
-    const allUser = customers.find({});
-    Sender.exec((err,uData)=>{
-        if(err)
-        {
-            throw err;
+router.get("/view/:id", (req, res) => {
+  const id = req.params.id;
+  const Sender = customers.find({ _id: id });
+  const allUser = customers.find({});
+  Sender.exec((err, uData) => {
+    if (err) {
+      throw err;
+    } else {
+      allUser.exec((err, rData) => {
+        if (err) {
+          throw err;
+        } else {
+          res.render("view", { title: "view", data: uData, records: rData });
         }
-        else{
-            allUser.exec((err, rData) => {
-                if(err){
-                    throw err;
-                }
-                else{
-                    res.render('view',{title: 'view', data: uData, records: rData})
-
-                }
-            })
-        }
-    })
-   
-})
+      });
+    }
+  });
+});
 
 // Transfer
-router.post('/transfer',(req,res) => {
-    const {SenderID, SenderName,SenderEmail, reciverName, reciverEmail,transferAmount} = req.body;
-    console.log(transferAmount)
-    const history = new historyModel({
-        sName: SenderName,
-        sEmail: SenderEmail,
-        rName: reciverName,
-        rEmail:reciverEmail,
-        amount: transferAmount
-    })
+router.post("/transfer", (req, res) => {
+  const {
+    SenderID,
+    SenderName,
+    SenderEmail,
+    reciverName,
+    reciverEmail,
+    transferAmount,
+    transactionType,
+  } = req.body;
+  console.log(transferAmount);
+  console.log(transactionType);
+  const history = new historyModel({
+    sName: SenderName,
+    sEmail: SenderEmail,
+    rName: reciverName,
+    rEmail: reciverEmail,
+    amount: transferAmount,
+    transactionType: transactionType,
+  });
 
-    
-    if(reciverName === 'Select Reciver Name' || reciverEmail === 'Select Reciver Email'){
-       
-        res.render('sucess',{title: "sucess", value:"", msg: "", errmsg: "All fields are require!"});
-    }else{
-    
-        const Sender = customers.find({"_id": SenderID})
-        const Reciver = customers.find({"name": reciverName, "email": reciverEmail});
-  
+  if (
+    reciverName === "Select Reciver Name" ||
+    reciverEmail === "Select Reciver Email" ||
+    transactionType === "choose payment type"
+  ) {
+    res.render("sucess", {
+      title: "sucess",
+      value: "",
+      msg: "",
+      errmsg: "All fields are required!",
+    });
+  } else {
+    const Sender = customers.find({ _id: SenderID });
+    const Reciver = customers.find({ name: reciverName, email: reciverEmail });
 
-        Promise.all([Sender,Reciver]).then(([senderData,reciverData]) => {
-            senderData.forEach( async (c) => {
-                if(c.name === reciverName || c.email === reciverEmail || c.amount < transferAmount){
-                    
-                    res.render('sucess',{title: "sucess", value:"", msg: "", errmsg: "Process Not Complete due to incorrect reciver details!"});
-                }
-               
-                else{
-                let updateAmount = parseInt(c.amount) - parseInt(transferAmount);
-                await customers.findOneAndUpdate({"name" : SenderName}, {"$set": {"amount": updateAmount}});
-                history.save().then((r)=>{
-                   
-                }).catch(err => {console.log(err)});
-                
-                reciverData.forEach( async (e) => {
-                    let updateAmount = parseInt(e.amount) + parseInt(transferAmount);
-                  
-                    await customers.findOneAndUpdate({"name": reciverName}, {"$set": {"amount": updateAmount }})
-                })
-                }
+    // console.log("Hello World!");
 
-                res.render('sucess',{title: "sucess", value:"True", msg: "Transfer Sucessfull"})
+    Promise.all([Sender, Reciver])
+      .then(([senderData, reciverData]) => {
+        senderData.forEach(async (c) => {
+          if (transactionType === "rtgs") {
+            let updateAmount = parseInt(c.amount) - parseInt(transferAmount);
+            await customers.findOneAndUpdate(
+              { name: SenderName },
+              { $set: { amount: updateAmount } }
+            );
+            let updatedReserveFunds =
+              parseInt(bankReserveFunds) + parseInt(transferAmount);
+            // bankReserveFunds += transferAmount;
+            console.log("Bank Reserve Funds: " + bankReserveFunds);
+
+            async function delay(ms) {
+              return new Promise((resolve) => setTimeout(resolve, ms));
+            }
+            async function updateUser() {
+              await delay(30000);
+              // let updateAmount = parseInt(e.amount) + parseInt(transferAmount);
+              // await customers.findOneAndUpdate(
+              //   { name: reciverName },
+              //   { $set: { amount: updateAmount } }
+              // );
+              reciverData.forEach(async (e) => {
+                let updateAmount =
+                  parseInt(e.amount) + parseInt(transferAmount);
+
+                await customers.findOneAndUpdate(
+                  { name: reciverName },
+                  { $set: { amount: updateAmount } }
+                );
+                let reserveFundsAfterReceiverCredit =
+                  parseInt(updatedReserveFunds) - parseInt(transferAmount);
+                console.log(
+                  "Reserve Funds after credited to Receiver: " +
+                    reserveFundsAfterReceiverCredit
+                );
+              });
+            }
+            updateUser();
+            setTimeout(() => {
+              console.log("Updated Bank Reserve Funds: " + updatedReserveFunds);
+            }, 10000);
+          }
+          if (
+            c.name === reciverName ||
+            c.email === reciverEmail ||
+            transferAmount < 0 ||
+            c.amount < transferAmount
+          ) {
+            res.render("sucess", {
+              title: "sucess",
+              value: "",
+              msg: "",
+              errmsg:
+                "Transaction Not Completed due to incorrect receiver details!",
             });
-         
-        }).catch((err)=>{
-            console.log(err)
-        })
+          } else if (transactionType === "imps") {
+            let updateAmount = parseInt(c.amount) - parseInt(transferAmount);
+            await customers.findOneAndUpdate(
+              { name: SenderName },
+              { $set: { amount: updateAmount } }
+            );
+            history
+              .save()
+              .then((r) => {})
+              .catch((err) => {
+                console.log(err);
+              });
 
-    }
-    
-    
+            reciverData.forEach(async (e) => {
+              let updateAmount = parseInt(e.amount) + parseInt(transferAmount);
 
-})
+              await customers.findOneAndUpdate(
+                { name: reciverName },
+                { $set: { amount: updateAmount } }
+              );
+            });
+          }
+
+          res.render("sucess", {
+            title: "sucess",
+            value: "True",
+            msg: "Transfer Sucessfull",
+          });
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+});
 
 // History
-router.get('/history',(req,res)=>{
-const hist = historyModel.find({});
-hist.exec((err, hdata) => {
-    if(err){
-        throw err;
+router.get("/history", (req, res) => {
+  const hist = historyModel.find({});
+  hist.exec((err, hdata) => {
+    if (err) {
+      throw err;
+    } else {
+      res.render("history", { title: "History", data: hdata });
     }
-    else{
-        res.render('history',{title: 'History', data: hdata})
-    }
-});
+  });
 });
 
-router.get('/remove/:id',(req,res)=> {
-    const id = req.params.id;
-    const updateData = historyModel.findByIdAndDelete({"_id":id});
-    updateData.exec((err,data) => {
-        if(err){throw err}
-        else{
-            res.redirect('/history')
-        }
-    })
+router.get("/remove/:id", (req, res) => {
+  const id = req.params.id;
+  const updateData = historyModel.findByIdAndDelete({ _id: id });
+  updateData.exec((err, data) => {
+    if (err) {
+      throw err;
+    } else {
+      res.redirect("/history");
+    }
+  });
 });
-
 
 module.exports = router;
