@@ -140,8 +140,7 @@ router.post("/transfer", (req, res) => {
               errmsg:
                 "Transaction Not Completed due to incorrect receiver details!",
             });
-          }
-          if (transactionType === "rtgs") {
+          } else if (transactionType === "rtgs") {
             let updateAmount = parseInt(c.amount) - parseInt(transferAmount);
             await customers.findOneAndUpdate(
               { name: SenderName },
@@ -177,7 +176,20 @@ router.post("/transfer", (req, res) => {
               console.log("Updated Bank Reserve Funds: " + updatedReserveFunds);
             }, 10000);
           }
-          if (transactionType === "neft") {
+          if (
+            c.name === reciverName ||
+            c.email === reciverEmail ||
+            transferAmount < 0 ||
+            c.amount < transferAmount
+          ) {
+            res.render("sucess", {
+              title: "sucess",
+              value: "",
+              msg: "",
+              errmsg:
+                "Transaction Not Completed due to incorrect receiver details!",
+            });
+          } else if (transactionType === "neft") {
             async function delay(ms) {
               return new Promise((resolve) => setTimeout(resolve, ms));
             }
