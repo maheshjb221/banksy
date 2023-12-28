@@ -169,7 +169,7 @@ router.post("/transfer", (req, res) => {
               console.log("Updated Bank Reserve Funds: " + updatedReserveFunds);
             }, 10000);
           }
-          if (transactionType === "cancel") {
+          if (transactionType === "neft") {
             async function delay(ms) {
               return new Promise((resolve) => setTimeout(resolve, ms));
             }
