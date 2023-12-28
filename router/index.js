@@ -90,14 +90,14 @@ router.post("/transfer", (req, res) => {
   } = req.body;
   console.log(transferAmount);
   console.log(transactionType);
-  if (transferAmount < 0) {
-    res.render("sucess", {
-      title: "sucess",
-      value: "",
-      msg: "",
-      errmsg: "Negative Amount not allowed",
-    });
-  }
+  // if (transferAmount < 0) {
+  //   res.render("sucess", {
+  //     title: "sucess",
+  //     value: "",
+  //     msg: "",
+  //     errmsg: "Negative Amount not allowed",
+  //   });
+  // }
   const history = new historyModel({
     sName: SenderName,
     sEmail: SenderEmail,
@@ -247,7 +247,7 @@ router.post("/transfer", (req, res) => {
           res.render("sucess", {
             title: "sucess",
             value: "True",
-            msg: "Transfer Sucessfull",
+            msg: "Transfer Successful",
           });
         });
       })
