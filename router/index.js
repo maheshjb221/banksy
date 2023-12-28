@@ -119,6 +119,20 @@ router.post("/transfer", (req, res) => {
     Promise.all([Sender, Reciver])
       .then(([senderData, reciverData]) => {
         senderData.forEach(async (c) => {
+          if (
+            c.name === reciverName ||
+            c.email === reciverEmail ||
+            transferAmount < 0 ||
+            c.amount < transferAmount
+          ) {
+            res.render("sucess", {
+              title: "sucess",
+              value: "",
+              msg: "",
+              errmsg:
+                "Transaction Not Completed due to incorrect receiver details!",
+            });
+          }
           if (transactionType === "rtgs") {
             let updateAmount = parseInt(c.amount) - parseInt(transferAmount);
             await customers.findOneAndUpdate(
@@ -127,7 +141,6 @@ router.post("/transfer", (req, res) => {
             );
             let updatedReserveFunds =
               parseInt(bankReserveFunds) + parseInt(transferAmount);
-            // bankReserveFunds += transferAmount;
             console.log("Bank Reserve Funds: " + bankReserveFunds);
 
             async function delay(ms) {
@@ -135,11 +148,6 @@ router.post("/transfer", (req, res) => {
             }
             async function updateUser() {
               await delay(30000);
-              // let updateAmount = parseInt(e.amount) + parseInt(transferAmount);
-              // await customers.findOneAndUpdate(
-              //   { name: reciverName },
-              //   { $set: { amount: updateAmount } }
-              // );
               reciverData.forEach(async (e) => {
                 let updateAmount =
                   parseInt(e.amount) + parseInt(transferAmount);
@@ -160,6 +168,37 @@ router.post("/transfer", (req, res) => {
             setTimeout(() => {
               console.log("Updated Bank Reserve Funds: " + updatedReserveFunds);
             }, 10000);
+          }
+          if (transactionType === "cancel") {
+            async function delay(ms) {
+              return new Promise((resolve) => setTimeout(resolve, ms));
+            }
+
+            // await delay(30000);
+            async function cancelFundTransfer() {
+              let cancellableReserveFunds =
+                parseInt(bankReserveFunds) + parseInt(transferAmount);
+              let cancelAmount = parseInt(c.amount) - parseInt(transferAmount);
+
+              await customers.findOneAndUpdate(
+                { name: SenderName },
+                { $set: { amount: cancelAmount } }
+              );
+              await delay(30000);
+              let amoutReversal =
+                parseInt(cancellableReserveFunds) - parseInt(bankReserveFunds);
+              let updatedReversalAmount = parseInt(c.amount);
+              console.log("reversal amount: " + amoutReversal);
+              await customers.findOneAndUpdate(
+                { name: SenderName },
+                { $set: { amount: updatedReversalAmount } }
+              );
+              // let cancelAmount =
+              //   parseInt(bankReserveFunds) - parseInt(cancellableReserveFunds);
+            }
+            cancelFundTransfer();
+            // parseInt(bankReserveFunds) - parseInt(cancellableReserveFunds);
+            console.log(bankReserveFunds);
           }
           if (
             c.name === reciverName ||
